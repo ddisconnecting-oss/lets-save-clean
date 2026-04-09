@@ -2,153 +2,191 @@
 
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
-import { useExpenses } from "@/context/ExpenseContext";
-import BarChartComp from "@/components/BarChart";
-import PieChartComp from "@/components/PieChart";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
-type Expense = {
+type Transaction = {
   name: string;
   amount: number;
   category: string;
+  type: "income" | "expense";
 };
 
+const COLORS = ["#16a34a", "#22c55e", "#4ade80", "#15803d", "#166534"];
+
 export default function Dashboard() {
-  const { expenses, addExpense, deleteExpense, budget, setBudget } = useExpenses();
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Food");
+  const [type, setType] = useState<"income" | "expense">("expense");
 
-  const totalExpenses = expenses.reduce(
-    (a: number, b: Expense) => a + b.amount,
-    0
-  );
+  const addTransaction = () => {
+    if (!name || !amount) return;
 
-  const balance = budget - totalExpenses;
+    setTransactions([
+      ...transactions,
+      {
+        name,
+        amount: Number(amount),
+        category,
+        type,
+      },
+    ]);
+
+    setName("");
+    setAmount("");
+  };
+
+  // totals
+  const income = transactions
+    .filter((t) => t.type === "income")
+    .reduce((a, b) => a + b.amount, 0);
+
+  const expenses = transactions
+    .filter((t) => t.type === "expense")
+    .reduce((a, b) => a + b.amount, 0);
+
+  const balance = income - expenses;
+
+  // group by category
+  const groupData = (type: "income" | "expense") => {
+    const filtered = transactions.filter((t) => t.type === type);
+
+    const grouped: any = {};
+
+    filtered.forEach((t) => {
+      if (!grouped[t.category]) grouped[t.category] = 0;
+      grouped[t.category] += t.amount;
+    });
+
+    return Object.keys(grouped).map((key) => ({
+      name: key,
+      value: grouped[key],
+    }));
+  };
+
+  const expenseData = groupData("expense");
+  const incomeData = groupData("income");
 
   return (
     <div className="flex">
       <Sidebar />
 
-      <div className="flex-1 p-10 space-y-8 max-w-6xl mx-auto">
+      <div className="flex-1 p-10 space-y-8 max-w-7xl mx-auto">
 
         <h1 className="text-3xl font-bold">Dashboard</h1>
 
-        {/* CARDS */}
+        {/* TOP CARDS */}
         <div className="grid md:grid-cols-3 gap-6">
           <div className="card">
-            <p className="text-sm text-gray-500">Monthly Budget</p>
-            <input
-              value={budget}
-              onChange={(e) => setBudget(Number(e.target.value))}
-              className="input mt-2"
-            />
+            <p>Total Income</p>
+            <h2 className="text-green-600 text-xl font-bold">₱{income}</h2>
           </div>
 
           <div className="card">
-            <p className="text-sm text-gray-500">Expenses</p>
-            <h2 className="text-red-500 text-xl font-bold">
-              ₱{totalExpenses}
-            </h2>
+            <p>Total Expenses</p>
+            <h2 className="text-red-500 text-xl font-bold">₱{expenses}</h2>
           </div>
 
           <div className="card">
-            <p className="text-sm text-gray-500">Balance</p>
-            <h2
-              className={`text-xl font-bold ${
-                balance < 0 ? "text-red-500" : "text-green-700"
-              }`}
-            >
-              ₱{balance}
-            </h2>
+            <p>Balance</p>
+            <h2 className="text-xl font-bold">₱{balance}</h2>
           </div>
         </div>
 
-        {/* ADD EXPENSE */}
+        {/* ADD FORM */}
         <div className="card space-y-3">
-          <h2 className="font-semibold text-lg">Add Expense</h2>
+          <h2 className="font-semibold">Add Transaction</h2>
 
           <input
-            placeholder="Expense name"
+            className="input"
+            placeholder="Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="input"
           />
 
           <input
+            className="input"
             placeholder="Amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="input"
           />
 
           <select
+            className="input"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="input"
           >
             <option>Food</option>
             <option>Bills</option>
             <option>Savings</option>
           </select>
 
-          <button
-            onClick={() => {
-              if (!name || !amount) return;
-
-              addExpense({
-                name,
-                amount: Number(amount),
-                category,
-              });
-
-              setName("");
-              setAmount("");
-            }}
-            className="btn"
+          <select
+            className="input"
+            value={type}
+            onChange={(e) => setType(e.target.value as any)}
           >
-            Add Expense
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+          </select>
+
+          <button onClick={addTransaction} className="btn">
+            Add
           </button>
         </div>
 
         {/* CHARTS */}
         <div className="grid md:grid-cols-2 gap-6">
-          <BarChartComp data={expenses} />
-          <PieChartComp data={expenses} />
+
+          {/* EXPENSE PIE */}
+          <div className="card">
+            <h3 className="mb-2">Expense Categories</h3>
+            <PieChart width={300} height={250}>
+              <Pie data={expenseData} dataKey="value" outerRadius={90}>
+                {expenseData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </div>
+
+          {/* INCOME PIE */}
+          <div className="card">
+            <h3 className="mb-2">Income Categories</h3>
+            <PieChart width={300} height={250}>
+              <Pie data={incomeData} dataKey="value" outerRadius={90}>
+                {incomeData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </div>
         </div>
 
-        {/* EXPENSE LIST */}
+        {/* BAR CHART */}
         <div className="card">
-          <h2 className="font-semibold mb-4 text-lg">Expenses</h2>
+          <h3 className="mb-2">Spending Overview</h3>
 
-          {expenses.length === 0 && (
-            <p className="text-gray-500">No expenses yet</p>
-          )}
-
-          {expenses.map((e: Expense, i: number) => (
-            <div
-              key={i}
-              className="flex justify-between items-center border-b py-3"
-            >
-              <div>
-                <p className="font-medium">{e.name}</p>
-                <span className="text-sm text-gray-500">
-                  {e.category}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <span className="font-semibold">₱{e.amount}</span>
-
-                <button
-                  onClick={() => deleteExpense(i)}
-                  className="text-red-500"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-          ))}
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={transactions}>
+              <XAxis dataKey="name" />
+              <Tooltip />
+              <Bar dataKey="amount" fill="#16a34a" />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
 
       </div>
