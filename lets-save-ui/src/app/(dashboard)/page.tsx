@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Chart from "@/components/Chart";
-import Sidebar from "@/components/Sidebar";
+import Chart from "@/app/components/Chart";
+import Sidebar from "@/app/components/Sidebar";
 
 export default function Dashboard() {
   const [expenses, setExpenses] = useState([
