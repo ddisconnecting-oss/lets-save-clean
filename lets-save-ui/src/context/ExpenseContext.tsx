@@ -8,7 +8,6 @@ export function ExpenseProvider({ children }: any) {
   const [expenses, setExpenses] = useState<any[]>([]);
   const [budget, setBudget] = useState(0);
 
-  // LOAD from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("expenses");
     const savedBudget = localStorage.getItem("budget");
@@ -17,7 +16,6 @@ export function ExpenseProvider({ children }: any) {
     if (savedBudget) setBudget(Number(savedBudget));
   }, []);
 
-  // SAVE to localStorage
   useEffect(() => {
     localStorage.setItem("expenses", JSON.stringify(expenses));
   }, [expenses]);

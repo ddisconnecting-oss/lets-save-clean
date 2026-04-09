@@ -22,11 +22,10 @@
 /* ✅ REPLACE THIS PART */
 
 body {
-  background: #f5efe6; /* beige */
+  background: #f5efe6;
   color: #2f3e2c;
 }
 
-/* cards */
 .card {
   background: #ffffff;
   border-radius: 12px;
