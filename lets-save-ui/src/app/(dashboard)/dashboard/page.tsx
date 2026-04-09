@@ -1,8 +1,8 @@
 "use client";
 
-import Sidebar from "@/components/Sidebar";
-import BarChartComp from "@/components/BarChart";
-import PieChartComp from "@/components/PieChart";
+import Sidebar from "@/app/components/Sidebar";
+import BarChartComp from "@/app/components/BarChart";
+import PieChartComp from "@/app/components/PieChart";
 
 export default function Dashboard() {
   const expenses = [
