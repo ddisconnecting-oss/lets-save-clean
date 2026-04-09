@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
+import { supabase } from "@/lib/supabase";
+import { useUser } from "@clerk/nextjs";
 import {
   BarChart,
   Bar,
@@ -14,6 +16,7 @@ import {
 } from "recharts";
 
 type Transaction = {
+  id: string;
   name: string;
   amount: number;
   category: string;
@@ -23,6 +26,8 @@ type Transaction = {
 const COLORS = ["#22c55e", "#16a34a", "#4ade80", "#15803d", "#166534"];
 
 export default function Dashboard() {
+  const { user } = useUser();
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState(["Food", "Bills", "Savings"]);
 
@@ -31,53 +36,66 @@ export default function Dashboard() {
   const [category, setCategory] = useState("Food");
   const [type, setType] = useState<"income" | "expense">("expense");
 
-  // ADD TRANSACTION
-  const addTransaction = () => {
-    if (!name || !amount) return;
+  // LOAD DATA
+  const loadTransactions = async () => {
+    if (!user) return;
 
-    setTransactions([
-      ...transactions,
+    const { data } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("user_id", user.id);
+
+    if (data) setTransactions(data);
+  };
+
+  useEffect(() => {
+    loadTransactions();
+  }, [user]);
+
+  // ADD
+  const addTransaction = async () => {
+    if (!name || !amount || !user) return;
+
+    await supabase.from("transactions").insert([
       {
         name,
         amount: Number(amount),
         category,
         type,
+        user_id: user.id,
       },
     ]);
 
     setName("");
     setAmount("");
+    loadTransactions();
   };
 
   // DELETE
-  const deleteTransaction = (i: number) => {
-    setTransactions(transactions.filter((_, index) => index !== i));
+  const deleteTransaction = async (id: string) => {
+    await supabase.from("transactions").delete().eq("id", id);
+    loadTransactions();
   };
 
   // EDIT
-  const editTransaction = (i: number) => {
-    const t = transactions[i];
+  const editTransaction = (t: Transaction) => {
     setName(t.name);
     setAmount(String(t.amount));
     setCategory(t.category);
     setType(t.type);
-    deleteTransaction(i);
+    deleteTransaction(t.id);
   };
 
-  // ADD CATEGORY (PROMPT)
+  // CATEGORY
   const addCategory = () => {
     const newCat = prompt("Enter new category:");
     if (!newCat) return;
 
-    if (categories.includes(newCat)) {
-      alert("Category already exists");
-      return;
-    }
+    if (categories.includes(newCat)) return;
 
     setCategories([...categories, newCat]);
   };
 
-  // DELETE CATEGORY
   const deleteCategory = (cat: string) => {
     if (!confirm(`Delete ${cat}?`)) return;
     setCategories(categories.filter((c) => c !== cat));
@@ -94,7 +112,7 @@ export default function Dashboard() {
 
   const balance = income - expenses;
 
-  // BAR DATA (FIXED)
+  // BAR DATA
   const groupedBarData = Object.values(
     transactions.reduce((acc: any, t) => {
       if (!acc[t.name]) {
@@ -159,58 +177,28 @@ export default function Dashboard() {
           <div className="card space-y-3">
             <h2>Add Transaction</h2>
 
-            <input
-              className="input"
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+            <input className="input" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+            <input className="input" placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
 
-            <input
-              className="input"
-              placeholder="Amount"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-            />
-
-            <select
-              className="input"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              {categories.map((c, i) => (
-                <option key={i}>{c}</option>
-              ))}
+            <select className="input" value={category} onChange={(e) => setCategory(e.target.value)}>
+              {categories.map((c, i) => <option key={i}>{c}</option>)}
             </select>
 
-            <select
-              className="input"
-              value={type}
-              onChange={(e) => setType(e.target.value as any)}
-            >
+            <select className="input" value={type} onChange={(e) => setType(e.target.value as any)}>
               <option value="expense">Expense</option>
               <option value="income">Income</option>
             </select>
 
-            <button onClick={addTransaction} className="btn">
-              Add
-            </button>
-
-            <button onClick={addCategory} className="btn">
-              + Add Category
-            </button>
+            <button onClick={addTransaction} className="btn">Add</button>
+            <button onClick={addCategory} className="btn">+ Add Category</button>
           </div>
 
           {/* CATEGORY LIST */}
           <div className="card">
             <h3>Categories</h3>
-
             <div className="flex flex-wrap gap-2 mt-2">
               {categories.map((c, i) => (
-                <div
-                  key={i}
-                  className="px-3 py-1 bg-green-100 rounded-full flex gap-2 items-center"
-                >
+                <div key={i} className="px-3 py-1 bg-green-100 rounded-full flex gap-2">
                   {c}
                   <button onClick={() => deleteCategory(c)}>✕</button>
                 </div>
@@ -225,9 +213,7 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie data={expenseData} dataKey="value" outerRadius={80}>
-                    {expenseData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
+                    {expenseData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
                   <Tooltip />
                 </PieChart>
@@ -239,9 +225,7 @@ export default function Dashboard() {
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie data={incomeData} dataKey="value" outerRadius={80}>
-                    {incomeData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
+                    {incomeData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
                   <Tooltip />
                 </PieChart>
@@ -252,7 +236,6 @@ export default function Dashboard() {
           {/* BAR */}
           <div className="card">
             <h3>Financial Overview</h3>
-
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={groupedBarData}>
@@ -269,17 +252,18 @@ export default function Dashboard() {
           <div className="card">
             <h3>Transactions</h3>
 
-            {transactions.map((t, i) => (
-              <div key={i} className="flex justify-between border-b py-2">
+            {transactions.map((t) => (
+              <div key={t.id} className="flex justify-between border-b py-2">
                 <span>{t.name} ({t.category})</span>
 
                 <div className="flex gap-3">
                   <span>₱{t.amount}</span>
-                  <button onClick={() => editTransaction(i)}>✏️</button>
-                  <button onClick={() => deleteTransaction(i)}>❌</button>
+                  <button onClick={() => editTransaction(t)}>✏️</button>
+                  <button onClick={() => deleteTransaction(t.id)}>❌</button>
                 </div>
               </div>
             ))}
+
           </div>
 
         </div>
