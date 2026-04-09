@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
-import { supabase } from "@/lib/supabase";
-import { useUser } from "@clerk/nextjs";
 import {
   BarChart,
   Bar,
@@ -26,8 +24,6 @@ type Transaction = {
 const COLORS = ["#22c55e", "#16a34a", "#4ade80", "#15803d", "#166534"];
 
 export default function Dashboard() {
-  const { user } = useUser();
-
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState(["Food", "Bills", "Savings"]);
 
@@ -36,45 +32,55 @@ export default function Dashboard() {
   const [category, setCategory] = useState("Food");
   const [type, setType] = useState<"income" | "expense">("expense");
 
-  // LOAD DATA
-  const loadTransactions = async () => {
-    if (!user) return;
-
-    const { data } = await supabase
-      .from("transactions")
-      .select("*")
-      .eq("user_id", user.id);
-
-    if (data) setTransactions(data);
-  };
-
+  // ✅ FAKE DATA LOAD (NO SUPABASE)
   useEffect(() => {
-    loadTransactions();
-  }, [user]);
+    setTransactions([
+      {
+        id: "1",
+        name: "Salary",
+        amount: 40000,
+        category: "Income",
+        type: "income",
+      },
+      {
+        id: "2",
+        name: "Food",
+        amount: 500,
+        category: "Food",
+        type: "expense",
+      },
+      {
+        id: "3",
+        name: "Bills",
+        amount: 1000,
+        category: "Bills",
+        type: "expense",
+      },
+    ]);
+  }, []);
 
   // ADD
-  const addTransaction = async () => {
-    if (!name || !amount || !user) return;
+  const addTransaction = () => {
+    if (!name || !amount) return;
 
-    await supabase.from("transactions").insert([
+    setTransactions([
+      ...transactions,
       {
+        id: Date.now().toString(),
         name,
         amount: Number(amount),
         category,
         type,
-        user_id: user.id,
       },
     ]);
 
     setName("");
     setAmount("");
-    loadTransactions();
   };
 
   // DELETE
-  const deleteTransaction = async (id: string) => {
-    await supabase.from("transactions").delete().eq("id", id);
-    loadTransactions();
+  const deleteTransaction = (id: string) => {
+    setTransactions(transactions.filter((t) => t.id !== id));
   };
 
   // EDIT
@@ -90,9 +96,7 @@ export default function Dashboard() {
   const addCategory = () => {
     const newCat = prompt("Enter new category:");
     if (!newCat) return;
-
     if (categories.includes(newCat)) return;
-
     setCategories([...categories, newCat]);
   };
 
@@ -152,7 +156,6 @@ export default function Dashboard() {
 
       <div className="flex-1 overflow-x-hidden">
         <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-8">
-
           <h1 className="text-3xl font-bold">Dashboard</h1>
 
           {/* CARDS */}
@@ -263,7 +266,6 @@ export default function Dashboard() {
                 </div>
               </div>
             ))}
-
           </div>
 
         </div>
