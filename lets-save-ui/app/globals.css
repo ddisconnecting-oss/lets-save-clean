@@ -19,8 +19,17 @@
   }
 }
 
+/* ✅ REPLACE THIS PART */
 body {
-  background: var(--background);
-  color: var(--foreground);
+  @apply bg-gradient-to-br from-green-200 to-blue-300 text-gray-900;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ✅ ADD THESE */
+.input {
+  @apply w-full border p-2 rounded-lg bg-white;
+}
+
+.btn {
+  @apply bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 transition;
 }
