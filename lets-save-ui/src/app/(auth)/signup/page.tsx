@@ -1,9 +1,9 @@
 import { SignUp } from "@clerk/nextjs";
 
-export default function SignupPage() {
+export default function Page() {
   return (
-    <div className="flex justify-center items-center min-h-screen">
-      <SignUp />
+    <div className="flex items-center justify-center min-h-screen">
+      <SignUp fallbackRedirectUrl="/dashboard" />
     </div>
   );
 }
