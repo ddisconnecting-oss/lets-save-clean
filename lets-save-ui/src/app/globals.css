@@ -21,6 +21,10 @@
 
 /* ✅ REPLACE THIS PART */
 body {
+  
+   background: #0f172a;
+  color: white;
+
   @apply bg-gradient-to-br from-green-200 to-blue-300 text-gray-900;
   font-family: Arial, Helvetica, sans-serif;
 }
