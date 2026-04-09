@@ -16,14 +16,14 @@ export default function Reports() {
     <div className="flex">
       <Sidebar />
 
-      <div className="flex-1 p-6 space-y-4">
-        <h1 className="text-xl font-bold">Reports</h1>
+      <div className="flex-1 p-10 max-w-6xl mx-auto space-y-6">
+        <h1 className="text-2xl font-bold">Reports</h1>
 
-        <div className="card overflow-x-auto">
+        <div className="card overflow-hidden">
           <table className="w-full text-left">
-            <thead className="border-b">
+            <thead className="border-b bg-gray-100">
               <tr>
-                <th className="p-2">Name</th>
+                <th className="p-3">Name</th>
                 <th>Amount</th>
                 <th>Category</th>
               </tr>
@@ -32,7 +32,7 @@ export default function Reports() {
             <tbody>
               {expenses.length === 0 && (
                 <tr>
-                  <td className="p-2 text-gray-500" colSpan={3}>
+                  <td className="p-3 text-gray-500" colSpan={3}>
                     No data yet
                   </td>
                 </tr>
@@ -40,7 +40,7 @@ export default function Reports() {
 
               {expenses.map((e: Expense, i: number) => (
                 <tr key={i} className="border-b">
-                  <td className="p-2">{e.name}</td>
+                  <td className="p-3">{e.name}</td>
                   <td>₱{e.amount}</td>
                   <td>{e.category}</td>
                 </tr>

@@ -1,43 +1,38 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-/* ✅ REPLACE THIS PART */
-
+/* 🌿 BASE THEME */
 body {
   background: #f5efe6;
   color: #2f3e2c;
+  font-family: sans-serif;
 }
 
+/* 🧱 CARD */
 .card {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
 }
 
-/* ✅ ADD THESE */
+/* INPUT */
 .input {
-  @apply w-full border p-2 rounded-lg bg-white;
+  width: 100%;
+  border: 1px solid #d6d3d1;
+  padding: 10px;
+  border-radius: 10px;
+  background: white;
 }
 
+/* BUTTON */
 .btn {
-  @apply bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 transition;
+  background: #2f6f3e;
+  color: white;
+  padding: 10px;
+  border-radius: 10px;
+  transition: 0.2s;
+}
+
+.btn:hover {
+  background: #255d34;
 }
