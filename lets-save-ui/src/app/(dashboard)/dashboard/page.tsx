@@ -1,14 +1,32 @@
 "use client";
 
+import { useState } from "react";
 import Sidebar from "@/app/components/Sidebar";
 import BarChartComp from "@/app/components/BarChart";
 import PieChartComp from "@/app/components/PieChart";
 
 export default function Dashboard() {
-  const expenses = [
-    { name: "Spotify", amount: 20 },
-    { name: "Food", amount: 50 },
-  ];
+  const [expenses, setExpenses] = useState([
+    { name: "Spotify", amount: 20, category: "Bills" },
+  ]);
+
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState("");
+  const [category, setCategory] = useState("Food");
+
+  const addExpense = () => {
+    if (!name || !amount) return;
+
+    setExpenses([
+      ...expenses,
+      { name, amount: Number(amount), category },
+    ]);
+
+    setName("");
+    setAmount("");
+  };
+
+  const totalExpenses = expenses.reduce((a, b) => a + b.amount, 0);
 
   return (
     <div className="flex">
@@ -19,31 +37,57 @@ export default function Dashboard() {
 
         {/* CARDS */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-slate-800 p-4 rounded-xl">
-            <p>Total Income</p>
-            <h2 className="text-green-400">₱40,000</h2>
-          </div>
-
-          <div className="bg-slate-800 p-4 rounded-xl">
+          <div className="card">
             <p>Total Expenses</p>
-            <h2 className="text-red-400">₱6,948</h2>
+            <h2 className="text-red-500">₱{totalExpenses}</h2>
           </div>
+        </div>
 
-          <div className="bg-slate-800 p-4 rounded-xl">
-            <p>Balance</p>
-            <h2 className="text-green-400">₱33,752</h2>
-          </div>
+        {/* ADD EXPENSE FORM */}
+        <div className="card space-y-2">
+          <h2>Add Expense</h2>
+
+          <input
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="border p-2 w-full rounded"
+          />
+
+          <input
+            placeholder="Amount"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="border p-2 w-full rounded"
+          />
+
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="border p-2 w-full rounded"
+          >
+            <option>Food</option>
+            <option>Bills</option>
+            <option>Savings</option>
+          </select>
+
+          <button
+            onClick={addExpense}
+            className="bg-green-700 text-white px-4 py-2 rounded"
+          >
+            Add Expense
+          </button>
         </div>
 
         {/* CHARTS */}
         <div className="grid grid-cols-2 gap-4">
-          <BarChartComp />
-          <PieChartComp />
+          <BarChartComp data={expenses} />
+          <PieChartComp data={expenses} />
         </div>
 
-        {/* EXPENSE LIST */}
-        <div className="bg-slate-800 p-4 rounded-xl">
-          <h2 className="mb-2">Expenses</h2>
+        {/* LIST */}
+        <div className="card">
+          <h2>Expenses</h2>
 
           {expenses.map((e, i) => (
             <div key={i} className="flex justify-between border-b py-2">
