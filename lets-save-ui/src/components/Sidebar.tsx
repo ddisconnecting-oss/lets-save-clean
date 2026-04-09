@@ -8,17 +8,9 @@ export default function Sidebar() {
       <h1 className="text-xl font-bold mb-8">LET’S SAVE!</h1>
 
       <nav className="flex flex-col gap-4">
-        <Link href="/dashboard" className="hover:text-green-200">
-          Dashboard
-        </Link>
-
-        <Link href="/reports" className="hover:text-green-200">
-          Reports
-        </Link>
-
-        <Link href="/account" className="hover:text-green-200">
-          Accounts
-        </Link>
+        <Link href="/dashboard">Dashboard</Link>
+        <Link href="/reports">Reports</Link>
+        <Link href="/account">Accounts</Link>
       </nav>
     </div>
   );

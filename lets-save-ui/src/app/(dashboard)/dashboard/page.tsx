@@ -31,8 +31,7 @@ export default function Dashboard() {
   const [category, setCategory] = useState("Food");
   const [type, setType] = useState<"income" | "expense">("expense");
 
-  const [newCategory, setNewCategory] = useState("");
-
+  // ADD TRANSACTION
   const addTransaction = () => {
     if (!name || !amount) return;
 
@@ -50,10 +49,12 @@ export default function Dashboard() {
     setAmount("");
   };
 
+  // DELETE
   const deleteTransaction = (i: number) => {
     setTransactions(transactions.filter((_, index) => index !== i));
   };
 
+  // EDIT
   const editTransaction = (i: number) => {
     const t = transactions[i];
     setName(t.name);
@@ -63,13 +64,26 @@ export default function Dashboard() {
     deleteTransaction(i);
   };
 
+  // ADD CATEGORY (PROMPT)
   const addCategory = () => {
-    if (!newCategory) return;
-    setCategories([...categories, newCategory]);
-    setNewCategory("");
+    const newCat = prompt("Enter new category:");
+    if (!newCat) return;
+
+    if (categories.includes(newCat)) {
+      alert("Category already exists");
+      return;
+    }
+
+    setCategories([...categories, newCat]);
   };
 
-  // totals
+  // DELETE CATEGORY
+  const deleteCategory = (cat: string) => {
+    if (!confirm(`Delete ${cat}?`)) return;
+    setCategories(categories.filter((c) => c !== cat));
+  };
+
+  // TOTALS
   const income = transactions
     .filter((t) => t.type === "income")
     .reduce((a, b) => a + b.amount, 0);
@@ -80,7 +94,7 @@ export default function Dashboard() {
 
   const balance = income - expenses;
 
-  // GROUPED BAR DATA (FIXED)
+  // BAR DATA (FIXED)
   const groupedBarData = Object.values(
     transactions.reduce((acc: any, t) => {
       if (!acc[t.name]) {
@@ -118,9 +132,8 @@ export default function Dashboard() {
     <div className="flex">
       <Sidebar />
 
-      {/* FIXED LAYOUT */}
-      <div className="flex-1 p-6 md:p-10 w-full overflow-hidden">
-        <div className="max-w-6xl mx-auto space-y-8">
+      <div className="flex-1 overflow-x-hidden">
+        <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-8">
 
           <h1 className="text-3xl font-bold">Dashboard</h1>
 
@@ -128,17 +141,17 @@ export default function Dashboard() {
           <div className="grid md:grid-cols-3 gap-6">
             <div className="card">
               <p>Total Income</p>
-              <h2 className="text-green-600 text-xl font-bold">₱{income}</h2>
+              <h2 className="text-green-600 font-bold">₱{income}</h2>
             </div>
 
             <div className="card">
               <p>Total Expenses</p>
-              <h2 className="text-red-500 text-xl font-bold">₱{expenses}</h2>
+              <h2 className="text-red-500 font-bold">₱{expenses}</h2>
             </div>
 
             <div className="card">
               <p>Balance</p>
-              <h2 className="text-xl font-bold">₱{balance}</h2>
+              <h2 className="font-bold">₱{balance}</h2>
             </div>
           </div>
 
@@ -183,24 +196,31 @@ export default function Dashboard() {
               Add
             </button>
 
-            {/* ADD CATEGORY */}
-            <div className="flex gap-2">
-              <input
-                className="input"
-                placeholder="New Category"
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-              />
-              <button onClick={addCategory} className="btn">
-                Add Category
-              </button>
+            <button onClick={addCategory} className="btn">
+              + Add Category
+            </button>
+          </div>
+
+          {/* CATEGORY LIST */}
+          <div className="card">
+            <h3>Categories</h3>
+
+            <div className="flex flex-wrap gap-2 mt-2">
+              {categories.map((c, i) => (
+                <div
+                  key={i}
+                  className="px-3 py-1 bg-green-100 rounded-full flex gap-2 items-center"
+                >
+                  {c}
+                  <button onClick={() => deleteCategory(c)}>✕</button>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* PIE CHARTS */}
+          {/* PIE */}
           <div className="grid md:grid-cols-2 gap-6">
-
-            <div className="card flex flex-col items-center">
+            <div className="card">
               <h3>Expenses</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
@@ -214,7 +234,7 @@ export default function Dashboard() {
               </ResponsiveContainer>
             </div>
 
-            <div className="card flex flex-col items-center">
+            <div className="card">
               <h3>Income</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
@@ -227,14 +247,13 @@ export default function Dashboard() {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-
           </div>
 
-          {/* BAR CHART (FIXED STYLE) */}
+          {/* BAR */}
           <div className="card">
-            <h3 className="mb-3">Financial Overview</h3>
+            <h3>Financial Overview</h3>
 
-            <div className="w-full h-[300px]">
+            <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={groupedBarData}>
                   <XAxis dataKey="name" />
@@ -251,7 +270,7 @@ export default function Dashboard() {
             <h3>Transactions</h3>
 
             {transactions.map((t, i) => (
-              <div key={i} className="flex justify-between py-2 border-b">
+              <div key={i} className="flex justify-between border-b py-2">
                 <span>{t.name} ({t.category})</span>
 
                 <div className="flex gap-3">
