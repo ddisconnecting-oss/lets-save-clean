@@ -12,6 +12,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { motion } from "framer-motion";
 
 type Transaction = {
   name: string;
@@ -20,31 +21,76 @@ type Transaction = {
   type: "income" | "expense";
 };
 
-const COLORS = ["#16a34a", "#22c55e", "#4ade80", "#15803d", "#166534"];
+const COLORS = [
+  "#16a34a",
+  "#22c55e",
+  "#4ade80",
+  "#15803d",
+  "#166534",
+  "#84cc16",
+];
 
 export default function Dashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [categories, setCategories] = useState(["Food", "Bills", "Savings"]);
 
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Food");
   const [type, setType] = useState<"income" | "expense">("expense");
 
+  const [newCategory, setNewCategory] = useState("");
+
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  // ADD CATEGORY
+  const addCategory = () => {
+    if (!newCategory) return;
+    setCategories([...categories, newCategory]);
+    setNewCategory("");
+  };
+
+  // ADD TRANSACTION
   const addTransaction = () => {
     if (!name || !amount) return;
 
-    setTransactions([
-      ...transactions,
-      {
+    if (editingIndex !== null) {
+      const updated = [...transactions];
+      updated[editingIndex] = {
         name,
         amount: Number(amount),
         category,
         type,
-      },
-    ]);
+      };
+      setTransactions(updated);
+      setEditingIndex(null);
+    } else {
+      setTransactions([
+        ...transactions,
+        {
+          name,
+          amount: Number(amount),
+          category,
+          type,
+        },
+      ]);
+    }
 
     setName("");
     setAmount("");
+  };
+
+  const deleteTransaction = (index: number) => {
+    setTransactions(transactions.filter((_, i) => i !== index));
+  };
+
+  const editTransaction = (index: number) => {
+    const t = transactions[index];
+    setName(t.name);
+    setAmount(String(t.amount));
+    setCategory(t.category);
+    setType(t.type);
+    setEditingIndex(index);
   };
 
   // totals
@@ -58,7 +104,7 @@ export default function Dashboard() {
 
   const balance = income - expenses;
 
-  // group by category
+  // group data
   const groupData = (type: "income" | "expense") => {
     const filtered = transactions.filter((t) => t.type === type);
 
@@ -88,25 +134,25 @@ export default function Dashboard() {
 
         {/* TOP CARDS */}
         <div className="grid md:grid-cols-3 gap-6">
-          <div className="card">
+          <motion.div whileHover={{ scale: 1.03 }} className="card">
             <p>Total Income</p>
             <h2 className="text-green-600 text-xl font-bold">₱{income}</h2>
-          </div>
+          </motion.div>
 
-          <div className="card">
+          <motion.div whileHover={{ scale: 1.03 }} className="card">
             <p>Total Expenses</p>
             <h2 className="text-red-500 text-xl font-bold">₱{expenses}</h2>
-          </div>
+          </motion.div>
 
-          <div className="card">
+          <motion.div whileHover={{ scale: 1.03 }} className="card">
             <p>Balance</p>
             <h2 className="text-xl font-bold">₱{balance}</h2>
-          </div>
+          </motion.div>
         </div>
 
-        {/* ADD FORM */}
+        {/* FORM */}
         <div className="card space-y-3">
-          <h2 className="font-semibold">Add Transaction</h2>
+          <h2 className="font-semibold">Add / Edit Transaction</h2>
 
           <input
             className="input"
@@ -127,9 +173,9 @@ export default function Dashboard() {
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           >
-            <option>Food</option>
-            <option>Bills</option>
-            <option>Savings</option>
+            {categories.map((c, i) => (
+              <option key={i}>{c}</option>
+            ))}
           </select>
 
           <select
@@ -142,16 +188,28 @@ export default function Dashboard() {
           </select>
 
           <button onClick={addTransaction} className="btn">
-            Add
+            {editingIndex !== null ? "Update" : "Add"}
           </button>
+
+          {/* ADD CATEGORY */}
+          <div className="flex gap-2">
+            <input
+              className="input"
+              placeholder="New Category"
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+            />
+            <button onClick={addCategory} className="btn">
+              Add Category
+            </button>
+          </div>
         </div>
 
         {/* CHARTS */}
         <div className="grid md:grid-cols-2 gap-6">
 
-          {/* EXPENSE PIE */}
           <div className="card">
-            <h3 className="mb-2">Expense Categories</h3>
+            <h3>Expenses</h3>
             <PieChart width={300} height={250}>
               <Pie data={expenseData} dataKey="value" outerRadius={90}>
                 {expenseData.map((_, i) => (
@@ -162,9 +220,8 @@ export default function Dashboard() {
             </PieChart>
           </div>
 
-          {/* INCOME PIE */}
           <div className="card">
-            <h3 className="mb-2">Income Categories</h3>
+            <h3>Income</h3>
             <PieChart width={300} height={250}>
               <Pie data={incomeData} dataKey="value" outerRadius={90}>
                 {incomeData.map((_, i) => (
@@ -176,10 +233,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* BAR CHART */}
+        {/* BAR */}
         <div className="card">
-          <h3 className="mb-2">Spending Overview</h3>
-
+          <h3>Overview</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={transactions}>
               <XAxis dataKey="name" />
@@ -187,6 +243,24 @@ export default function Dashboard() {
               <Bar dataKey="amount" fill="#16a34a" />
             </BarChart>
           </ResponsiveContainer>
+        </div>
+
+        {/* LIST */}
+        <div className="card">
+          <h3>Transactions</h3>
+
+          {transactions.map((t, i) => (
+            <div key={i} className="flex justify-between py-2 border-b">
+              <span>{t.name} ({t.category})</span>
+
+              <div className="flex gap-3">
+                <span>₱{t.amount}</span>
+
+                <button onClick={() => editTransaction(i)}>✏️</button>
+                <button onClick={() => deleteTransaction(i)}>❌</button>
+              </div>
+            </div>
+          ))}
         </div>
 
       </div>
