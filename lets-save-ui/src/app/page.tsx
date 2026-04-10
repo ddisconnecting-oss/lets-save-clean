@@ -12,9 +12,9 @@ export default function Home() {
     if (!isLoaded) return;
 
     if (isSignedIn) {
-      router.push("/dashboard");
+      router.replace("/dashboard");
     } else {
-      router.push("/login");
+      router.replace("/login");
     }
   }, [isSignedIn, isLoaded]);
 

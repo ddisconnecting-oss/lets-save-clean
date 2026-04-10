@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
+import { supabase } from "@/lib/supabase";
+import { useUser } from "@clerk/nextjs";
 import {
   BarChart,
   Bar,
@@ -24,6 +26,8 @@ type Transaction = {
 const COLORS = ["#22c55e", "#16a34a", "#4ade80", "#15803d", "#166534"];
 
 export default function Dashboard() {
+  const { user } = useUser();
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState(["Food", "Bills", "Savings"]);
 
@@ -32,55 +36,45 @@ export default function Dashboard() {
   const [category, setCategory] = useState("Food");
   const [type, setType] = useState<"income" | "expense">("expense");
 
-  // FAKE DATA LOAD (NO SUPABASE) Supabase does not work yet so place this
+  // LOAD DATA
+  const loadTransactions = async () => {
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("user_id", user.id);
+
+    if (data) setTransactions(data);
+  };
+
   useEffect(() => {
-    setTransactions([
-      {
-        id: "1",
-        name: "Salary",
-        amount: 40000,
-        category: "Income",
-        type: "income",
-      },
-      {
-        id: "2",
-        name: "Food",
-        amount: 500,
-        category: "Food",
-        type: "expense",
-      },
-      {
-        id: "3",
-        name: "Bills",
-        amount: 1000,
-        category: "Bills",
-        type: "expense",
-      },
-    ]);
-  }, []);
+    loadTransactions();
+  }, [user]);
 
   // ADD
-  const addTransaction = () => {
-    if (!name || !amount) return;
+  const addTransaction = async () => {
+    if (!name || !amount || !user) return;
 
-    setTransactions([
-      ...transactions,
+    await supabase.from("transactions").insert([
       {
-        id: Date.now().toString(),
         name,
         amount: Number(amount),
         category,
         type,
+        user_id: user.id,
       },
     ]);
 
     setName("");
     setAmount("");
+    loadTransactions();
   };
 
   // DELETE
-  const deleteTransaction = (id: string) => {
-    setTransactions(transactions.filter((t) => t.id !== id));
+  const deleteTransaction = async (id: string) => {
+    await supabase.from("transactions").delete().eq("id", id);
+    loadTransactions();
   };
 
   // EDIT
@@ -156,6 +150,7 @@ export default function Dashboard() {
 
       <div className="flex-1 overflow-x-hidden">
         <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-8">
+
           <h1 className="text-3xl font-bold">Dashboard</h1>
 
           {/* CARDS */}
@@ -194,78 +189,6 @@ export default function Dashboard() {
 
             <button onClick={addTransaction} className="btn">Add</button>
             <button onClick={addCategory} className="btn">+ Add Category</button>
-          </div>
-
-          {/* CATEGORY LIST */}
-          <div className="card">
-            <h3>Categories</h3>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {categories.map((c, i) => (
-                <div key={i} className="px-3 py-1 bg-green-100 rounded-full flex gap-2">
-                  {c}
-                  <button onClick={() => deleteCategory(c)}>✕</button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* PIE */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="card">
-              <h3>Expenses</h3>
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie data={expenseData} dataKey="value" outerRadius={80}>
-                    {expenseData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="card">
-              <h3>Income</h3>
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie data={incomeData} dataKey="value" outerRadius={80}>
-                    {incomeData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* BAR */}
-          <div className="card">
-            <h3>Financial Overview</h3>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={groupedBarData}>
-                  <XAxis dataKey="name" />
-                  <Tooltip />
-                  <Bar dataKey="income" fill="#22c55e" />
-                  <Bar dataKey="expense" fill="#ef4444" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* LIST */}
-          <div className="card">
-            <h3>Transactions</h3>
-
-            {transactions.map((t) => (
-              <div key={t.id} className="flex justify-between border-b py-2">
-                <span>{t.name} ({t.category})</span>
-
-                <div className="flex gap-3">
-                  <span>₱{t.amount}</span>
-                  <button onClick={() => editTransaction(t)}>✏️</button>
-                  <button onClick={() => deleteTransaction(t.id)}>❌</button>
-                </div>
-              </div>
-            ))}
           </div>
 
         </div>
