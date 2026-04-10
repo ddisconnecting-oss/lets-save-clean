@@ -11,12 +11,16 @@ export default function Home() {
   useEffect(() => {
     if (!isLoaded) return;
 
-    if (isSignedIn) {
-      router.replace("/dashboard");
+    if (!isSignedIn) {
+      router.replace("/login"); // 👈 GO TO LOGIN FIRST
     } else {
-      router.replace("/login");
+      router.replace("/dashboard"); // 👈 AFTER LOGIN
     }
   }, [isSignedIn, isLoaded]);
 
-  return null;
+  return (
+    <div className="flex items-center justify-center h-screen">
+      <p>Loading...</p>
+    </div>
+  );
 }
