@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
-/* 🌿 BASE THEME */
+/* BASE THEME */
 body {
   background: #f5efe6;
   color: #2f3e2c;
   font-family: sans-serif;
 }
 
-/* 🧱 CARD */
+/* CARD */
 .card {
   background: #ffffff;
   border-radius: 16px;

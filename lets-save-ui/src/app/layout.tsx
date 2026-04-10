@@ -1,5 +1,6 @@
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
+import { ExpenseProvider } from "@/context/ExpenseContext";
 
 export default function RootLayout({
   children,
@@ -8,9 +9,11 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
-        <body>{children}</body>
-      </html>
+      <ExpenseProvider>
+        <html lang="en" suppressHydrationWarning>
+          <body>{children}</body>
+        </html>
+      </ExpenseProvider>
     </ClerkProvider>
   );
 }

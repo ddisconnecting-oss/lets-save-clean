@@ -32,7 +32,7 @@ export default function Dashboard() {
   const [category, setCategory] = useState("Food");
   const [type, setType] = useState<"income" | "expense">("expense");
 
-  // ✅ FAKE DATA LOAD (NO SUPABASE)
+  // FAKE DATA LOAD (NO SUPABASE) Supabase does not work yet so place this
   useEffect(() => {
     setTransactions([
       {
