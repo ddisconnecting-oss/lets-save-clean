@@ -12,9 +12,9 @@ export default function Home() {
     if (!isLoaded) return;
 
     if (!isSignedIn) {
-      router.replace("/login"); // 👈 FIRST SCREEN
+      router.replace("/login");
     } else {
-      router.replace("/dashboard"); // 👈 AFTER LOGIN
+      router.replace("/dashboard");
     }
   }, [isSignedIn, isLoaded]);
 
