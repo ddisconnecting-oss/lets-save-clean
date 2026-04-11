@@ -12,15 +12,11 @@ export default function Home() {
     if (!isLoaded) return;
 
     if (!isSignedIn) {
-      router.replace("/login"); // 👈 GO TO LOGIN FIRST
+      router.replace("/login"); // 👈 FIRST SCREEN
     } else {
       router.replace("/dashboard"); // 👈 AFTER LOGIN
     }
   }, [isSignedIn, isLoaded]);
 
-  return (
-    <div className="flex items-center justify-center h-screen">
-      <p>Loading...</p>
-    </div>
-  );
+  return null;
 }
