@@ -5,9 +5,17 @@ import Sidebar from "@/components/Sidebar";
 import { supabase } from "@/lib/supabase";
 import { useUser } from "@clerk/nextjs";
 
+type Transaction = {
+  id: string;
+  name: string;
+  amount: number;
+  category: string;
+  type: string;
+};
+
 export default function Reports() {
   const { user } = useUser();
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<Transaction[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -16,11 +24,15 @@ export default function Reports() {
       const { data, error } = await supabase
         .from("transactions")
         .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .eq("user_id", user.id);
 
-      if (error) console.error(error);
-      else setData(data || []);
+      if (error) {
+        console.error("REPORT ERROR:", error.message);
+        setData([]);
+        return;
+      }
+
+      setData(data ?? []);
     };
 
     load();
@@ -30,31 +42,20 @@ export default function Reports() {
     <div className="flex">
       <Sidebar />
 
-      <div className="p-6 w-full">
-        <h1 className="text-2xl font-bold mb-4">Reports</h1>
+      <div className="p-6 w-full max-w-5xl mx-auto">
+        <h1 className="text-2xl font-bold mb-6">Reports</h1>
 
         <div className="card">
-          <table className="w-full text-left">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Amount</th>
-                <th>Category</th>
-                <th>Type</th>
-              </tr>
-            </thead>
+          {data.length === 0 && <p>No data yet</p>}
 
-            <tbody>
-              {data.map((item) => (
-                <tr key={item.id} className="border-t">
-                  <td>{item.name}</td>
-                  <td>₱{item.amount}</td>
-                  <td>{item.category}</td>
-                  <td>{item.type}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {data.map((item) => (
+            <div key={item.id} className="flex justify-between border-b py-2">
+              <span>
+                {item.name} ({item.category})
+              </span>
+              <span>₱{item.amount}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

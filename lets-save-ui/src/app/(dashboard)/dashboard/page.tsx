@@ -34,6 +34,11 @@ export default function Dashboard() {
   const [category, setCategory] = useState("");
   const [type, setType] = useState<"income" | "expense">("expense");
 
+  // ✅ CATEGORY SYSTEM
+  const [categories, setCategories] = useState(["Food", "Bills", "Savings"]);
+  const [showModal, setShowModal] = useState(false);
+  const [newCategory, setNewCategory] = useState("");
+
   // 🔥 LOAD DATA
   const loadTransactions = async () => {
     if (!user) return;
@@ -55,7 +60,7 @@ export default function Dashboard() {
     loadTransactions();
   }, [user]);
 
-  // ➕ ADD
+  // ➕ ADD TRANSACTION
   const addTransaction = async () => {
     if (!name || !amount || !category || !user) return;
 
@@ -112,7 +117,7 @@ export default function Dashboard() {
     }, {})
   );
 
-  // 🥧 PIE
+  // 🥧 PIE DATA
   const pieData = (type: "income" | "expense") => {
     const grouped: any = {};
 
@@ -173,12 +178,26 @@ export default function Dashboard() {
             onChange={(e) => setAmount(e.target.value)}
           />
 
-          <input
-            className="input"
-            placeholder="Category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          />
+          {/* ✅ CATEGORY DROPDOWN + ADD BUTTON */}
+          <div className="flex gap-2">
+            <select
+              className="input flex-1"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              <option value="">Select category</option>
+              {categories.map((c, i) => (
+                <option key={i}>{c}</option>
+              ))}
+            </select>
+
+            <button
+              onClick={() => setShowModal(true)}
+              className="btn bg-green-600"
+            >
+              +
+            </button>
+          </div>
 
           <select
             className="input"
@@ -194,7 +213,7 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* 🥧 PIE */}
+        {/* 🥧 PIE CHARTS */}
         <div className="grid md:grid-cols-2 gap-4">
           <div className="card">
             <h3>Expenses</h3>
@@ -244,6 +263,8 @@ export default function Dashboard() {
         <div className="card">
           <h3>Transactions</h3>
 
+          {transactions.length === 0 && <p>No data yet</p>}
+
           {transactions.map((t) => (
             <div key={t.id} className="flex justify-between border-b py-2">
               <span>
@@ -257,6 +278,45 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
+
+        {/* 🧠 CATEGORY MODAL */}
+        {showModal && (
+          <div className="fixed inset-0 bg-black/30 flex items-center justify-center">
+            <div className="bg-white p-6 rounded-xl w-[300px] space-y-3">
+              <h2 className="font-bold">Add Category</h2>
+
+              <input
+                className="input"
+                placeholder="Category name"
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
+              />
+
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="px-3 py-1 bg-gray-300 rounded"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (!newCategory) return;
+
+                    setCategories([...categories, newCategory]);
+                    setCategory(newCategory);
+                    setNewCategory("");
+                    setShowModal(false);
+                  }}
+                  className="px-3 py-1 bg-green-600 text-white rounded"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
