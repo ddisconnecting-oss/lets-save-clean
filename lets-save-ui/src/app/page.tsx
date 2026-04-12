@@ -8,7 +8,7 @@ export default function Home() {
   const router = useRouter();
   const { isSignedIn, isLoaded } = useUser();
 
-  // 🔥 auto redirect if already logged in
+  
   useEffect(() => {
     if (!isLoaded) return;
     if (isSignedIn) {

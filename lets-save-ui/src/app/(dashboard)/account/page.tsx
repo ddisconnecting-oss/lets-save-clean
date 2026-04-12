@@ -6,7 +6,7 @@ import Sidebar from "@/components/Sidebar";
 export default function AccountPage() {
   const { user, isLoaded } = useUser();
 
-  // ✅ WAIT until user loads
+  
   if (!isLoaded || !user) {
     return <div className="p-8">Loading...</div>;
   }

@@ -39,7 +39,7 @@ export default function Dashboard() {
   const [showModal, setShowModal] = useState(false);
   const [newCategory, setNewCategory] = useState("");
 
-  // 🚀 LOAD DATA
+  // LOAD DATA
   const loadData = async () => {
     if (!user) return;
 
@@ -65,7 +65,7 @@ export default function Dashboard() {
     if (isLoaded && user) loadData();
   }, [isLoaded, user]);
 
-  // ➕ ADD TRANSACTION
+  // ADD TRANSACTION
   const addTransaction = async () => {
     if (!name || !amount || !category || !user) return;
 
@@ -91,7 +91,7 @@ export default function Dashboard() {
     loadData();
   };
 
-  // ❌ DELETE
+  // DELETE
   const deleteTransaction = async (id: string) => {
     const { error } = await supabase
       .from("expenses")
@@ -124,7 +124,7 @@ export default function Dashboard() {
     loadData();
   };
 
-  // 💰 CALCULATIONS
+  // CALCULATIONS
   const income = transactions
     .filter((t) => t.type === "income")
     .reduce((a, b) => a + b.amount, 0);
@@ -135,7 +135,7 @@ export default function Dashboard() {
 
   const balance = income - expenses;
 
-  // 📊 BAR DATA
+  // BAR DATA
   const barData = Object.values(
     transactions.reduce((acc: any, t) => {
       if (!acc[t.category]) {
@@ -149,7 +149,7 @@ export default function Dashboard() {
     }, {})
   );
 
-  // 🥧 PIE DATA
+  // PIE DATA
   const pieData = (type: "income" | "expense") => {
     const grouped: any = {};
 
