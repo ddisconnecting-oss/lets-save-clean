@@ -215,7 +215,7 @@ export default function Dashboard() {
         <div className="grid md:grid-cols-2 gap-4">
           <div className="card">
             <h3>Expenses</h3>
-            <div className="h-[250px] w-full">
+            <div className="h-62.5 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={pieData("expense")} dataKey="value">
@@ -231,7 +231,7 @@ export default function Dashboard() {
 
           <div className="card">
             <h3>Income</h3>
-            <div className="h-[250px] w-full">
+            <div className="h-62.5 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={pieData("income")} dataKey="value">
@@ -249,7 +249,7 @@ export default function Dashboard() {
         {/* BAR */}
         <div className="card">
           <h3>Overview</h3>
-          <div className="h-[300px] w-full">
+          <div className="h-75 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData}>
                 <XAxis dataKey="name" />
@@ -284,7 +284,7 @@ export default function Dashboard() {
         {/* CATEGORY MODAL */}
         {showModal && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center">
-            <div className="bg-white p-6 rounded-xl w-[300px] space-y-3">
+            <div className="bg-white p-6 rounded-xl w-75 space-y-3">
               <h2 className="font-bold">Add Category</h2>
 
               <input
