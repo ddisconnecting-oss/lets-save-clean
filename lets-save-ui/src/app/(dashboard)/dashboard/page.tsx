@@ -43,18 +43,19 @@ export default function Dashboard() {
   const loadData = async () => {
     if (!user) return;
 
-    // load transactions
-    const { data: tData } = await supabase
+    const { data: tData, error: tError } = await supabase
       .from("expenses")
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    // load categories
-    const { data: cData } = await supabase
+    const { data: cData, error: cError } = await supabase
       .from("categories")
       .select("*")
       .eq("user_id", user.id);
+
+    if (tError) console.error("Transactions error:", tError);
+    if (cError) console.error("Categories error:", cError);
 
     setTransactions(tData || []);
     setCategories(cData?.map((c) => c.name) || []);
@@ -68,7 +69,7 @@ export default function Dashboard() {
   const addTransaction = async () => {
     if (!name || !amount || !category || !user) return;
 
-    await supabase.from("expenses").insert([
+    const { error } = await supabase.from("expenses").insert([
       {
         name,
         amount: Number(amount),
@@ -78,16 +79,27 @@ export default function Dashboard() {
       },
     ]);
 
+    if (error) {
+      console.error("Insert error:", error);
+      return;
+    }
+
     setName("");
     setAmount("");
     setCategory("");
 
-    loadData(); // 🔥 refresh
+    loadData();
   };
 
   // ❌ DELETE
   const deleteTransaction = async (id: string) => {
-    await supabase.from("expenses").delete().eq("id", id);
+    const { error } = await supabase
+      .from("expenses")
+      .delete()
+      .eq("id", id);
+
+    if (error) console.error(error);
+
     loadData();
   };
 
@@ -95,16 +107,21 @@ export default function Dashboard() {
   const addCategory = async () => {
     if (!newCategory || !user) return;
 
-    await supabase.from("categories").insert([
+    const { error } = await supabase.from("categories").insert([
       {
         name: newCategory,
         user_id: user.id,
       },
     ]);
 
+    if (error) {
+      console.error(error);
+      return;
+    }
+
     setNewCategory("");
     setShowModal(false);
-    loadData(); // 🔥 refresh categories
+    loadData();
   };
 
   // 💰 CALCULATIONS
@@ -149,8 +166,8 @@ export default function Dashboard() {
     }));
   };
 
-  // 🚫 LOADING FIX
-  if (!isLoaded || !user) return <div className="p-6">Loading...</div>;
+  if (!isLoaded || !user)
+    return <div className="p-6">Loading dashboard...</div>;
 
   return (
     <div className="flex">
@@ -158,57 +175,95 @@ export default function Dashboard() {
 
       <div className="flex-1 p-6 max-w-6xl mx-auto space-y-6 overflow-x-hidden">
 
-        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-[#2f3e2c]">
+          Dashboard
+        </h1>
 
         {/* CARDS */}
         <div className="grid md:grid-cols-3 gap-4">
-          <div className="card">
-            <p>Total Income</p>
-            <h2 className="text-green-600">₱{income}</h2>
+          <div className="bg-white p-4 rounded-xl shadow">
+            <p className="text-sm text-gray-500">Total Income</p>
+            <h2 className="text-green-600 text-xl font-bold">
+              ₱{income}
+            </h2>
           </div>
 
-          <div className="card">
-            <p>Total Expenses</p>
-            <h2 className="text-red-500">₱{expenses}</h2>
+          <div className="bg-white p-4 rounded-xl shadow">
+            <p className="text-sm text-gray-500">Total Expenses</p>
+            <h2 className="text-red-500 text-xl font-bold">
+              ₱{expenses}
+            </h2>
           </div>
 
-          <div className="card">
-            <p>Balance</p>
-            <h2>₱{balance}</h2>
+          <div className="bg-white p-4 rounded-xl shadow">
+            <p className="text-sm text-gray-500">Balance</p>
+            <h2 className="text-xl font-bold">₱{balance}</h2>
           </div>
         </div>
 
         {/* FORM */}
-        <div className="card space-y-3">
-          <h2>Add Transaction</h2>
+        <div className="bg-white p-4 rounded-xl shadow space-y-3">
+          <h2 className="font-semibold">Add Transaction</h2>
 
-          <input className="input" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
-          <input className="input" placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
+          <input
+            className="input"
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+
+          <input
+            className="input"
+            placeholder="Amount"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+          />
 
           <div className="flex gap-2">
-            <select className="input flex-1" value={category} onChange={(e) => setCategory(e.target.value)}>
+            <select
+              className="input flex-1"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
               <option value="">Select category</option>
               {categories.map((c, i) => (
                 <option key={i}>{c}</option>
               ))}
             </select>
 
-            <button onClick={() => setShowModal(true)} className="btn bg-green-600">+</button>
+            <button
+              onClick={() => setShowModal(true)}
+              className="bg-green-600 text-white px-3 rounded"
+            >
+              +
+            </button>
           </div>
 
-          <select className="input" value={type} onChange={(e) => setType(e.target.value as any)}>
+          <select
+            className="input"
+            value={type}
+            onChange={(e) => setType(e.target.value as any)}
+          >
             <option value="expense">Expense</option>
             <option value="income">Income</option>
           </select>
 
-          <button onClick={addTransaction} className="btn">Add</button>
+          <button
+            onClick={addTransaction}
+            className="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800"
+          >
+            Add
+          </button>
         </div>
 
-        {/* PIE CHARTS */}
+        {/* PIE */}
         <div className="grid md:grid-cols-2 gap-4">
           {["expense", "income"].map((t, idx) => (
-            <div key={idx} className="card">
-              <h3>{t === "expense" ? "Expenses" : "Income"}</h3>
+            <div key={idx} className="bg-white p-4 rounded-xl shadow">
+              <h3 className="font-semibold mb-2">
+                {t === "expense" ? "Expenses" : "Income"}
+              </h3>
+
               <div className="w-full h-[250px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -226,8 +281,9 @@ export default function Dashboard() {
         </div>
 
         {/* BAR */}
-        <div className="card">
-          <h3>Overview</h3>
+        <div className="bg-white p-4 rounded-xl shadow">
+          <h3 className="font-semibold mb-2">Overview</h3>
+
           <div className="w-full h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData}>
@@ -241,15 +297,26 @@ export default function Dashboard() {
         </div>
 
         {/* LIST */}
-        <div className="card">
-          <h3>Transactions</h3>
+        <div className="bg-white p-4 rounded-xl shadow">
+          <h3 className="font-semibold mb-2">Transactions</h3>
 
           {transactions.map((t) => (
-            <div key={t.id} className="flex justify-between border-b py-2">
-              <span>{t.name} ({t.category})</span>
+            <div
+              key={t.id}
+              className="flex justify-between border-b py-2"
+            >
+              <span>
+                {t.name} ({t.category})
+              </span>
+
               <div className="flex gap-3">
                 <span>₱{t.amount}</span>
-                <button onClick={() => deleteTransaction(t.id)}>❌</button>
+                <button
+                  onClick={() => deleteTransaction(t.id)}
+                  className="text-red-500"
+                >
+                  ✕
+                </button>
               </div>
             </div>
           ))}
@@ -269,8 +336,13 @@ export default function Dashboard() {
               />
 
               <div className="flex justify-end gap-2">
-                <button onClick={() => setShowModal(false)}>Cancel</button>
-                <button onClick={addCategory} className="bg-green-600 text-white px-3 py-1 rounded">
+                <button onClick={() => setShowModal(false)}>
+                  Cancel
+                </button>
+                <button
+                  onClick={addCategory}
+                  className="bg-green-600 text-white px-3 py-1 rounded"
+                >
                   Add
                 </button>
               </div>

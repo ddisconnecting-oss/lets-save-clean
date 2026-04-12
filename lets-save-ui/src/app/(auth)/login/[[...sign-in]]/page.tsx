@@ -1,12 +1,8 @@
 "use client";
 
 import { SignIn } from "@clerk/nextjs";
-import { useSearchParams } from "next/navigation";
 
 export default function Page() {
-  const params = useSearchParams();
-  const error = params.get("error");
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f5efe6]">
 
@@ -15,15 +11,6 @@ export default function Page() {
         <h1 className="text-2xl font-bold mb-4 text-[#2f3e2c]">
           Welcome Back
         </h1>
-
-        {/* 🔥 CUSTOM ERROR */}
-        {error && (
-          <div className="bg-red-100 text-red-700 p-2 rounded mb-4 text-sm">
-            {error === "notfound"
-              ? "Account not found. Please sign up first."
-              : "Something went wrong. Try again."}
-          </div>
-        )}
 
         <SignIn
           routing="hash"
