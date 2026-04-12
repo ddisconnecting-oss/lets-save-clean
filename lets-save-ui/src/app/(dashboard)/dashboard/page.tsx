@@ -34,12 +34,12 @@ export default function Dashboard() {
   const [category, setCategory] = useState("");
   const [type, setType] = useState<"income" | "expense">("expense");
 
-  // ✅ CATEGORY SYSTEM
+  // CATEGORY SYSTEM
   const [categories, setCategories] = useState(["Food", "Bills", "Savings"]);
   const [showModal, setShowModal] = useState(false);
   const [newCategory, setNewCategory] = useState("");
 
-  // 🔥 LOAD DATA
+  // LOAD DATA
   const loadTransactions = async () => {
     if (!user) return;
 
@@ -60,7 +60,7 @@ export default function Dashboard() {
     loadTransactions();
   }, [user]);
 
-  // ➕ ADD TRANSACTION
+  // ADD TRANSACTION
   const addTransaction = async () => {
     if (!name || !amount || !category || !user) return;
 
@@ -86,13 +86,13 @@ export default function Dashboard() {
     await loadTransactions();
   };
 
-  // ❌ DELETE
+  // DELETE
   const deleteTransaction = async (id: string) => {
     await supabase.from("transactions").delete().eq("id", id);
     loadTransactions();
   };
 
-  // 💰 CALCULATIONS
+  // CALCULATIONS
   const income = transactions
     .filter((t) => t.type === "income")
     .reduce((a, b) => a + b.amount, 0);
@@ -103,7 +103,7 @@ export default function Dashboard() {
 
   const balance = income - expenses;
 
-  // 📊 BAR DATA
+  // BAR DATA
   const barData = Object.values(
     transactions.reduce((acc: any, t) => {
       if (!acc[t.category]) {
@@ -117,7 +117,7 @@ export default function Dashboard() {
     }, {})
   );
 
-  // 🥧 PIE DATA
+  // PIE DATA
   const pieData = (type: "income" | "expense") => {
     const grouped: any = {};
 
@@ -142,7 +142,7 @@ export default function Dashboard() {
 
         <h1 className="text-3xl font-bold">Dashboard</h1>
 
-        {/* 💰 CARDS */}
+        {/* CARDS */}
         <div className="grid md:grid-cols-3 gap-4">
           <div className="card">
             <p>Total Income</p>
@@ -160,7 +160,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ➕ FORM */}
+        {/* FORM */}
         <div className="card space-y-3">
           <h2>Add Transaction</h2>
 
@@ -178,7 +178,7 @@ export default function Dashboard() {
             onChange={(e) => setAmount(e.target.value)}
           />
 
-          {/* ✅ CATEGORY DROPDOWN + ADD BUTTON */}
+          {/* CATEGORY DROPDOWN + ADD BUTTON */}
           <div className="flex gap-2">
             <select
               className="input flex-1"
@@ -213,7 +213,7 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* 🥧 PIE CHARTS */}
+        {/* PIE CHARTS */}
         <div className="grid md:grid-cols-2 gap-4">
           <div className="card">
             <h3>Expenses</h3>
@@ -244,10 +244,10 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* 📊 BAR */}
+        {/* BAR */}
         <div className="card">
           <h3>Overview</h3>
-          <div className="h-[300px]">
+          <div className="h-75">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData}>
                 <XAxis dataKey="name" />
@@ -259,7 +259,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* 📋 LIST */}
+        {/* LIST */}
         <div className="card">
           <h3>Transactions</h3>
 
@@ -279,10 +279,10 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* 🧠 CATEGORY MODAL */}
+        {/* CATEGORY MODAL */}
         {showModal && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center">
-            <div className="bg-white p-6 rounded-xl w-[300px] space-y-3">
+            <div className="bg-white p-6 rounded-xl w-75 space-y-3">
               <h2 className="font-bold">Add Category</h2>
 
               <input
