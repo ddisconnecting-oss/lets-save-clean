@@ -34,7 +34,6 @@ export default function Dashboard() {
   const [category, setCategory] = useState("");
   const [type, setType] = useState<"income" | "expense">("expense");
 
-  // CATEGORY SYSTEM
   const [categories, setCategories] = useState(["Food", "Bills", "Savings"]);
   const [showModal, setShowModal] = useState(false);
   const [newCategory, setNewCategory] = useState("");
@@ -60,7 +59,7 @@ export default function Dashboard() {
     loadTransactions();
   }, [user]);
 
-  // ADD TRANSACTION
+  // ADD
   const addTransaction = async () => {
     if (!name || !amount || !category || !user) return;
 
@@ -138,7 +137,7 @@ export default function Dashboard() {
     <div className="flex">
       <Sidebar />
 
-      <div className="flex-1 p-6 max-w-6xl mx-auto space-y-6">
+      <div className="flex-1 p-6 max-w-6xl mx-auto space-y-6 overflow-x-hidden">
 
         <h1 className="text-3xl font-bold">Dashboard</h1>
 
@@ -178,7 +177,6 @@ export default function Dashboard() {
             onChange={(e) => setAmount(e.target.value)}
           />
 
-          {/* CATEGORY DROPDOWN + ADD BUTTON */}
           <div className="flex gap-2">
             <select
               className="input flex-1"
@@ -217,37 +215,41 @@ export default function Dashboard() {
         <div className="grid md:grid-cols-2 gap-4">
           <div className="card">
             <h3>Expenses</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie data={pieData("expense")} dataKey="value">
-                  {pieData("expense").map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="h-[250px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={pieData("expense")} dataKey="value">
+                    {pieData("expense").map((_, i) => (
+                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
           <div className="card">
             <h3>Income</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie data={pieData("income")} dataKey="value">
-                  {pieData("income").map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="h-[250px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={pieData("income")} dataKey="value">
+                    {pieData("income").map((_, i) => (
+                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 
         {/* BAR */}
         <div className="card">
           <h3>Overview</h3>
-          <div className="h-75">
+          <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData}>
                 <XAxis dataKey="name" />
@@ -282,7 +284,7 @@ export default function Dashboard() {
         {/* CATEGORY MODAL */}
         {showModal && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center">
-            <div className="bg-white p-6 rounded-xl w-75 space-y-3">
+            <div className="bg-white p-6 rounded-xl w-[300px] space-y-3">
               <h2 className="font-bold">Add Category</h2>
 
               <input
