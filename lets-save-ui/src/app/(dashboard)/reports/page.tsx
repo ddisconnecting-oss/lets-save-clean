@@ -1,63 +1,78 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Sidebar from "@/components/Sidebar";
 import { supabase } from "@/lib/supabase";
-import { useUser } from "@clerk/nextjs";
+import Sidebar from "@/components/Sidebar";
 
-type Transaction = {
-  id: string;
+type Expense = {
+  id: number;
   name: string;
   amount: number;
   category: string;
-  type: string;
+  created_at: string;
 };
 
 export default function Reports() {
-  const { user } = useUser();
-  const [data, setData] = useState<Transaction[]>([]);
+  const [data, setData] = useState<Expense[]>([]);
 
   useEffect(() => {
     const load = async () => {
-      if (!user) return;
-
       const { data, error } = await supabase
-        .from("transactions")
+        .from("expenses")
         .select("*")
-        .eq("user_id", user.id);
+        .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("REPORT ERROR:", error.message);
-        setData([]);
-        return;
-      }
-
-      setData(data ?? []);
+      if (!error) setData(data || []);
     };
 
     load();
-  }, [user]);
+  }, []);
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-[#f5efe6]">
       <Sidebar />
 
-      <div className="p-6 w-full max-w-5xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Reports</h1>
+      <main className="flex-1 p-8">
+        <h1 className="text-3xl font-bold mb-6 text-[#2f3e2c]">Reports</h1>
 
-        <div className="card">
-          {data.length === 0 && <p>No data yet</p>}
+        <div className="bg-[#d6e3c5] rounded-xl p-4 shadow-md">
+          
+          {/* TABLE HEADER */}
+          <div className="grid grid-cols-5 font-semibold border-b pb-2 mb-2">
+            <span>Name</span>
+            <span>Category</span>
+            <span>Amount</span>
+            <span>Date</span>
+            <span>Time</span>
+          </div>
 
-          {data.map((item) => (
-            <div key={item.id} className="flex justify-between border-b py-2">
-              <span>
-                {item.name} ({item.category})
-              </span>
-              <span>₱{item.amount}</span>
-            </div>
-          ))}
+          {/* SCROLLABLE TABLE */}
+          <div className="max-h-[400px] overflow-y-auto space-y-2">
+            {data.map((item) => {
+              const date = new Date(item.created_at);
+
+              return (
+                <div
+                  key={item.id}
+                  className="grid grid-cols-5 bg-white p-2 rounded-md"
+                >
+                  <span>{item.name}</span>
+                  <span>{item.category}</span>
+                  <span>₱{item.amount}</span>
+                  <span>{date.toLocaleDateString()}</span>
+                  <span>{date.toLocaleTimeString()}</span>
+                </div>
+              );
+            })}
+
+            {data.length === 0 && (
+              <p className="text-center text-gray-500 mt-4">
+                No data yet
+              </p>
+            )}
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

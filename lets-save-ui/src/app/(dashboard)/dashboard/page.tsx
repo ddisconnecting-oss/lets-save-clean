@@ -26,44 +26,49 @@ type Transaction = {
 const COLORS = ["#22c55e", "#16a34a", "#4ade80", "#15803d", "#166534"];
 
 export default function Dashboard() {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
   const [type, setType] = useState<"income" | "expense">("expense");
 
-  const [categories, setCategories] = useState(["Food", "Bills", "Savings"]);
   const [showModal, setShowModal] = useState(false);
   const [newCategory, setNewCategory] = useState("");
 
-  // LOAD DATA
-  const loadTransactions = async () => {
+  // 🚀 LOAD DATA
+  const loadData = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from("transactions")
+    // load transactions
+    const { data: tData } = await supabase
+      .from("expenses")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    // load categories
+    const { data: cData } = await supabase
+      .from("categories")
       .select("*")
       .eq("user_id", user.id);
 
-    if (error) {
-      console.error("FETCH ERROR:", error.message);
-      return;
-    }
-
-    setTransactions(data || []);
+    setTransactions(tData || []);
+    setCategories(cData?.map((c) => c.name) || []);
   };
 
   useEffect(() => {
-    loadTransactions();
-  }, [user]);
+    if (isLoaded && user) loadData();
+  }, [isLoaded, user]);
 
-  // ADD
+  // ➕ ADD TRANSACTION
   const addTransaction = async () => {
     if (!name || !amount || !category || !user) return;
 
-    const { error } = await supabase.from("transactions").insert([
+    await supabase.from("expenses").insert([
       {
         name,
         amount: Number(amount),
@@ -73,25 +78,36 @@ export default function Dashboard() {
       },
     ]);
 
-    if (error) {
-      console.error("INSERT ERROR:", error.message);
-      return;
-    }
-
     setName("");
     setAmount("");
     setCategory("");
 
-    await loadTransactions();
+    loadData(); // 🔥 refresh
   };
 
-  // DELETE
+  // ❌ DELETE
   const deleteTransaction = async (id: string) => {
-    await supabase.from("transactions").delete().eq("id", id);
-    loadTransactions();
+    await supabase.from("expenses").delete().eq("id", id);
+    loadData();
   };
 
-  // CALCULATIONS
+  // ➕ ADD CATEGORY
+  const addCategory = async () => {
+    if (!newCategory || !user) return;
+
+    await supabase.from("categories").insert([
+      {
+        name: newCategory,
+        user_id: user.id,
+      },
+    ]);
+
+    setNewCategory("");
+    setShowModal(false);
+    loadData(); // 🔥 refresh categories
+  };
+
+  // 💰 CALCULATIONS
   const income = transactions
     .filter((t) => t.type === "income")
     .reduce((a, b) => a + b.amount, 0);
@@ -102,7 +118,7 @@ export default function Dashboard() {
 
   const balance = income - expenses;
 
-  // BAR DATA
+  // 📊 BAR DATA
   const barData = Object.values(
     transactions.reduce((acc: any, t) => {
       if (!acc[t.category]) {
@@ -116,7 +132,7 @@ export default function Dashboard() {
     }, {})
   );
 
-  // PIE DATA
+  // 🥧 PIE DATA
   const pieData = (type: "income" | "expense") => {
     const grouped: any = {};
 
@@ -132,6 +148,9 @@ export default function Dashboard() {
       value: grouped[k],
     }));
   };
+
+  // 🚫 LOADING FIX
+  if (!isLoaded || !user) return <div className="p-6">Loading...</div>;
 
   return (
     <div className="flex">
@@ -163,93 +182,53 @@ export default function Dashboard() {
         <div className="card space-y-3">
           <h2>Add Transaction</h2>
 
-          <input
-            className="input"
-            placeholder="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-
-          <input
-            className="input"
-            placeholder="Amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
+          <input className="input" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+          <input className="input" placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} />
 
           <div className="flex gap-2">
-            <select
-              className="input flex-1"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
+            <select className="input flex-1" value={category} onChange={(e) => setCategory(e.target.value)}>
               <option value="">Select category</option>
               {categories.map((c, i) => (
                 <option key={i}>{c}</option>
               ))}
             </select>
 
-            <button
-              onClick={() => setShowModal(true)}
-              className="btn bg-green-600"
-            >
-              +
-            </button>
+            <button onClick={() => setShowModal(true)} className="btn bg-green-600">+</button>
           </div>
 
-          <select
-            className="input"
-            value={type}
-            onChange={(e) => setType(e.target.value as any)}
-          >
+          <select className="input" value={type} onChange={(e) => setType(e.target.value as any)}>
             <option value="expense">Expense</option>
             <option value="income">Income</option>
           </select>
 
-          <button onClick={addTransaction} className="btn">
-            Add
-          </button>
+          <button onClick={addTransaction} className="btn">Add</button>
         </div>
 
         {/* PIE CHARTS */}
         <div className="grid md:grid-cols-2 gap-4">
-          <div className="card">
-            <h3>Expenses</h3>
-            <div className="h-62.5 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={pieData("expense")} dataKey="value">
-                    {pieData("expense").map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+          {["expense", "income"].map((t, idx) => (
+            <div key={idx} className="card">
+              <h3>{t === "expense" ? "Expenses" : "Income"}</h3>
+              <div className="w-full h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={pieData(t as any)} dataKey="value">
+                      {pieData(t as any).map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-          </div>
-
-          <div className="card">
-            <h3>Income</h3>
-            <div className="h-62.5 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={pieData("income")} dataKey="value">
-                    {pieData("income").map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+          ))}
         </div>
 
         {/* BAR */}
         <div className="card">
           <h3>Overview</h3>
-          <div className="h-75 w-full">
+          <div className="w-full h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData}>
                 <XAxis dataKey="name" />
@@ -265,14 +244,9 @@ export default function Dashboard() {
         <div className="card">
           <h3>Transactions</h3>
 
-          {transactions.length === 0 && <p>No data yet</p>}
-
           {transactions.map((t) => (
             <div key={t.id} className="flex justify-between border-b py-2">
-              <span>
-                {t.name} ({t.category})
-              </span>
-
+              <span>{t.name} ({t.category})</span>
               <div className="flex gap-3">
                 <span>₱{t.amount}</span>
                 <button onClick={() => deleteTransaction(t.id)}>❌</button>
@@ -281,45 +255,28 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* CATEGORY MODAL */}
+        {/* MODAL */}
         {showModal && (
           <div className="fixed inset-0 bg-black/30 flex items-center justify-center">
-            <div className="bg-white p-6 rounded-xl w-75 space-y-3">
-              <h2 className="font-bold">Add Category</h2>
+            <div className="bg-white p-6 rounded-xl w-72 space-y-3">
+              <h2>Add Category</h2>
 
               <input
                 className="input"
-                placeholder="Category name"
+                placeholder="Category"
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
               />
 
               <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="px-3 py-1 bg-gray-300 rounded"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  onClick={() => {
-                    if (!newCategory) return;
-
-                    setCategories([...categories, newCategory]);
-                    setCategory(newCategory);
-                    setNewCategory("");
-                    setShowModal(false);
-                  }}
-                  className="px-3 py-1 bg-green-600 text-white rounded"
-                >
+                <button onClick={() => setShowModal(false)}>Cancel</button>
+                <button onClick={addCategory} className="bg-green-600 text-white px-3 py-1 rounded">
                   Add
                 </button>
               </div>
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
