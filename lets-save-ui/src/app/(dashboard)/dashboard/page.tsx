@@ -17,7 +17,8 @@ type Transaction = {
   type: "income" | "expense";
 };
 
-const COLORS = ["#22c55e","#16a34a","#4ade80","#15803d","#166534"];
+const EXPENSE_COLORS = ["#ef4444","#dc2626","#f87171","#b91c1c","#7f1d1d"];
+const INCOME_COLORS = ["#22c55e","#16a34a","#4ade80","#15803d","#166534"];
 
 export default function Dashboard() {
   const { user, isLoaded } = useUser();
@@ -157,7 +158,6 @@ export default function Dashboard() {
 
       <div className="flex-1 p-8 max-w-7xl mx-auto space-y-8">
 
-        {/* STATS */}
         <div className="grid md:grid-cols-3 gap-6">
           {[ 
             {label:"Income",value:income,color:"text-green-600"},
@@ -173,7 +173,6 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* FORM */}
         <div className="bg-white/70 p-6 rounded-2xl shadow-md space-y-4">
           <input className="input" placeholder="Name" value={name} onChange={e=>setName(e.target.value)} />
           <input className="input" placeholder="Amount" value={amount} onChange={e=>setAmount(e.target.value)} />
@@ -222,7 +221,6 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* CHARTS */}
         <div className="grid md:grid-cols-3 gap-6">
 
           <div className="md:col-span-2 bg-white/70 p-6 rounded-2xl shadow-md">
@@ -251,9 +249,10 @@ export default function Dashboard() {
                 <PieChart>
                   <Pie data={pieData("expense")} dataKey="value">
                     {pieData("expense").map((_,i)=>
-                      <Cell key={i} fill="#ef4444"/>
+                      <Cell key={i} fill={EXPENSE_COLORS[i % EXPENSE_COLORS.length]}/>
                     )}
                   </Pie>
+                  <Tooltip formatter={(value:any,name:any)=>[`₱${value}`, name]} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -270,9 +269,10 @@ export default function Dashboard() {
                 <PieChart>
                   <Pie data={pieData("income")} dataKey="value">
                     {pieData("income").map((_,i)=>
-                      <Cell key={i} fill="#22c55e"/>
+                      <Cell key={i} fill={INCOME_COLORS[i % INCOME_COLORS.length]}/>
                     )}
                   </Pie>
+                  <Tooltip formatter={(value:any,name:any)=>[`₱${value}`, name]} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -280,7 +280,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* TRANSACTIONS */}
         <div className="bg-white/70 p-6 rounded-2xl shadow-md">
           <h3 className="mb-4 font-semibold">Recent Activity</h3>
 
@@ -303,7 +302,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* MODAL */}
         {showModal && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
             <div className="bg-white p-6 rounded-xl space-y-4">
